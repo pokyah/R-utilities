@@ -24,3 +24,4 @@ You can also add it to your riot.im room with the [rss integration tool](https:/
 
 ## Contributors
 [Thomas Goossens](https://pokyah.github.io)
+[AMF]()
