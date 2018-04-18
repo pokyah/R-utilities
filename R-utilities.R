@@ -30,6 +30,16 @@ source_files_recursively.fun <- function(path.chr) {
 }
 
 #+ ---------------------------------
+#' ## Function to list all the packages installed by user.
+#' inspiration:
+#' [1](https://stackoverflow.com/questions/38481980/get-the-list-of-installed-packages-by-user-in-r#40120266)
+get_installed_packages.fun <- function(){ 
+  ip = as.data.frame(installed.packages()[,c(1,3:4)])
+  ip = ip[is.na(ip$Priority),1:2,drop=FALSE]
+  return(ip)
+}
+
+#+ ---------------------------------
 #' ## Function to transform a linear model list output to a dataframe.
 #' 
 #' Useful for markdown export with [kable](https://www.rdocumentation.org/packages/knitr/versions/1.20/topics/kable)
