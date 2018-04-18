@@ -142,7 +142,7 @@ $(document).ready(function () {
 </div>
 <div id="function-to-transform-a-linear-model-list-output-to-a-dataframe." class="section level2">
 <h2>Function to transform a linear model list output to a dataframe.</h2>
-<p>Useful for markdown export with [kable](<a href="https://www.rdocumentation.org/packages/knitr/versions/1.20/topics/kable" class="uri">https://www.rdocumentation.org/packages/knitr/versions/1.20/topics/kable</a> inspiration: <a href="http://r.789695.n4.nabble.com/Export-summary-from-regression-output-td4647109.html">1</a></p>
+<p>Useful for markdown export with <a href="https://www.rdocumentation.org/packages/knitr/versions/1.20/topics/kable">kable</a> inspiration: <a href="http://r.789695.n4.nabble.com/Export-summary-from-regression-output-td4647109.html">1</a></p>
 <pre class="r"><code>lm_output_to_df.fun &lt;-function(lm.l){ 
   values&lt;-c(paste(as.character(summary(lm.l)$call),collapse=&quot; &quot;), 
             lm.l$coefficients[1], 
