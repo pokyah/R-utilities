@@ -32,7 +32,7 @@ source_files_recursively.fun <- function(path.chr) {
 #+ ---------------------------------
 #' ## Function to transform a linear model list output to a dataframe.
 #' 
-#' Useful for markdown export with [kable](https://www.rdocumentation.org/packages/knitr/versions/1.20/topics/kable
+#' Useful for markdown export with [kable](https://www.rdocumentation.org/packages/knitr/versions/1.20/topics/kable)
 #' inspiration:
 #' [1](http://r.789695.n4.nabble.com/Export-summary-from-regression-output-td4647109.html)
 lm_output_to_df.fun <-function(lm.l){ 
