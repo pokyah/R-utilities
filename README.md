@@ -23,5 +23,6 @@ Subscribe to the repository commit feed](https://github.com/pokyah/R-utilities/c
 You can also add it to your riot.im room with the [rss integration tool](https://medium.com/@RiotChat/new-integration-atom-rss-feeds-395bf1031094)
 
 ## Contributors
-[Thomas Goossens](https://pokyah.github.io)
-[AMF]()
+* [Thomas Goossens](https://pokyah.github.io)
+* [AMF]()
+* [Fred VanWin](https://frdvnw.github.io)
