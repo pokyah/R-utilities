@@ -18,5 +18,9 @@ Please respect the structuration of the file by adding the following information
 Once you have made modifications to the `R-utilities.R` file, please render it using 
 `rmarkdown::render("R-utilities.R")` before submitting pull request.
 
+## How to get notified of code updates ? 
+Subscribe to the repository commit feed](https://github.com/pokyah/R-utilities/commits/master.atom)
+You can also add it to your riot.im room with the [rss integration tool](https://medium.com/@RiotChat/new-integration-atom-rss-feeds-395bf1031094)
+
 ## Contributors
 [Thomas Goossens](https://pokyah.github.io)
