@@ -12,12 +12,38 @@
 #'date: \ 18-04-2018\
 #'---
 
+#+ ---------------------------------
+#' ## Function to create a raster stack of Elevation, Slope and Aspect for Wallonia
+#' Inspiration :  
+#' [1](ttps://gis.stackexchange.com/questions/189866/how-to-check-my-epsg-and-units-in-r-when-it-is-not-defined-in-proj4string)
+build_topo_rasters.fun <- function() {
+  # Get the Wallonia DEM
+  bel.ele.ras = raster::getData("alt", country = "BE", mask = TRUE)
+  
+  # but what are the units ? h
+  # it seems that the data are not projected but are in longlat so we need to project it to get the units
+  bel.ele.ras <- projectRaster(bel_ele.ras, crs = toString((filter(crs_data.df, code=="3812"))$prj4))
+  
+  # compute the slope from the elevation
+  bel.slope.ras <- terrain(bel.ele.ras, opt="slope", unit="degrees")
+  
+  # compute the aspect from the elevation
+  bel.aspect.ras <- terrain(bel_ele.ras, opt="aspect", unit="degrees")
+  
+  # create the stack of rasters
+  topo.stack.ras <- stack(bel.ele.ras, bel.slope.ras, bel.aspect.ras)
+  
+  # Return the stack of rasters
+  return(topo.stack.ras)
+}
+
 
 #+ ---------------------------------
-#' ## Function to create and save a spatial grid of the desired resolution for Wallonia
+#' ## Function to create a spatial grid of the desired resolution for Wallonia
 #' * `res.num` is a numeric that expresses the desired resolution expressed in kilometers
 #' * `geom.chr` is a character that expresses the [desired geometry](https://www.rdocumentation.org/packages/sf/versions/0.6-1/topics/st_make_grid). Can take the values `"polygons"`, `"centers"` and `"corners`
 #' 
+#' Inspiration :  
 #' [1](https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf)
 #' [2](https://gis.stackexchange.com/questions/22843/converting-decimal-degrees-units-to-km-in-r)
 #' [3](https://stackoverflow.com/questions/48727511/r-grid-of-points-from-polygon-input)
@@ -46,7 +72,7 @@ build_wal_grid.fun <- function(res.num, geom.chr) {
 #+ ---------------------------------
 #' ## Function to recursively source all the function stored in a folder (designed by its path)
 #' 
-#' Inspiration :
+#' Inspiration :  
 #' [1](https://stackoverflow.com/questions/32862426/load-all-files-from-folder-and-subfolders)
 source_files_recursively.fun <- function(path.chr) {
   dirs <- list.dirs(path.chr, recursive = FALSE)
@@ -62,7 +88,7 @@ source_files_recursively.fun <- function(path.chr) {
 
 #+ ---------------------------------
 #' ## Function to list all the packages installed by user.
-#' inspiration:
+#' Inspiration:  
 #' [1](https://stackoverflow.com/questions/38481980/get-the-list-of-installed-packages-by-user-in-r#40120266)
 get_installed_packages.fun <- function(){ 
   ip = as.data.frame(installed.packages()[,c(1,3:4)])
@@ -74,7 +100,7 @@ get_installed_packages.fun <- function(){
 #' ## Function to transform a linear model list output to a dataframe.
 #' 
 #' Useful for markdown export with [kable](https://www.rdocumentation.org/packages/knitr/versions/1.20/topics/kable)
-#' inspiration:
+#' Inspiration:  
 #' [1](http://r.789695.n4.nabble.com/Export-summary-from-regression-output-td4647109.html)
 lm_output_to_df.fun <-function(lm.l){ 
   values<-c(paste(as.character(summary(lm.l)$call),collapse=" "), 
