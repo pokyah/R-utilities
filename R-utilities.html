@@ -125,6 +125,35 @@ $(document).ready(function () {
 </div>
 
 
+<div id="function-to-create-and-save-a-spatial-grid-of-the-desired-resolution-for-wallonia" class="section level2">
+<h2>Function to create and save a spatial grid of the desired resolution for Wallonia</h2>
+<ul>
+<li><code>res.num</code> is a numeric that expresses the desired resolution expressed in kilometers</li>
+<li><code>geom.chr</code> is a character that expresses the <a href="https://www.rdocumentation.org/packages/sf/versions/0.6-1/topics/st_make_grid">desired geometry</a>. Can take the values <code>&quot;polygons&quot;</code>, <code>&quot;centers&quot;</code> and <code>&quot;corners</code></li>
+</ul>
+<p><a href="https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf">1</a> <a href="https://gis.stackexchange.com/questions/22843/converting-decimal-degrees-units-to-km-in-r">2</a> <a href="https://stackoverflow.com/questions/48727511/r-grid-of-points-from-polygon-input">3</a></p>
+<pre class="r"><code>build_wal_grid.fun &lt;- function(res.num, geom.chr) {
+  library(sf)
+  library(dplyr)
+  library(raster)
+  
+  # Get the Wallonia adminisrative boundary - default EPSG is 4326
+  wallonia.4326.sf &lt;- dplyr::filter(st_as_sf(getData('GADM', country=&quot;BE&quot;, level=1)), NAME_1==&quot;Wallonie&quot;)
+  
+  # convert from geographic lat/lon to projected in meters
+  wallonia.3812.sf &lt;- sf::st_transform(wallonia.4326.sf, 3812) # projected EPSG for Belgian Lambert 2008 
+  
+  # make the grid and clip it with the Wallonia boundaries 
+  # st_intersection(st_make_grid(wallonia.sf, n=c(100,100), what=&quot;centers&quot;), dataset.sf)
+  grid.sf &lt;- st_make_grid(wallonia.3812.sf, cellsize = res.num*1000, what=geom.chr)
+  
+  # Clip the grid with the administrative boundary of Wallonia
+  grid.sf &lt;- st_intersection(grid.sf, wallonia.3812.sf)
+  
+  # Return the clipped grid
+  return(grid.sf)  
+}</code></pre>
+</div>
 <div id="function-to-recursively-source-all-the-function-stored-in-a-folder-designed-by-its-path" class="section level2">
 <h2>Function to recursively source all the function stored in a folder (designed by its path)</h2>
 <p>Inspiration : <a href="https://stackoverflow.com/questions/32862426/load-all-files-from-folder-and-subfolders">1</a></p>
@@ -138,6 +167,15 @@ $(document).ready(function () {
     source(f)
   for (d in dirs)
     source_files_recursively.fun(d)
+}</code></pre>
+</div>
+<div id="function-to-list-all-the-packages-installed-by-user." class="section level2">
+<h2>Function to list all the packages installed by user.</h2>
+<p>inspiration: <a href="https://stackoverflow.com/questions/38481980/get-the-list-of-installed-packages-by-user-in-r#40120266">1</a></p>
+<pre class="r"><code>get_installed_packages.fun &lt;- function(){ 
+  ip = as.data.frame(installed.packages()[,c(1,3:4)])
+  ip = ip[is.na(ip$Priority),1:2,drop=FALSE]
+  return(ip)
 }</code></pre>
 </div>
 <div id="function-to-transform-a-linear-model-list-output-to-a-dataframe." class="section level2">
