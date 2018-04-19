@@ -17,18 +17,23 @@
 #' Inspiration :  
 #' [1](ttps://gis.stackexchange.com/questions/189866/how-to-check-my-epsg-and-units-in-r-when-it-is-not-defined-in-proj4string)
 build_topo_rasters.fun <- function() {
+  # Loading the required library
+  library(raster)
+  library(rgdal)
+  library(dplyr)
+  
   # Get the Wallonia DEM
-  bel.ele.ras = raster::getData("alt", country = "BE", mask = TRUE)
+  bel.ele.ras = getData("alt", country = "BE", mask = TRUE)
   
   # but what are the units ? h
   # it seems that the data are not projected but are in longlat so we need to project it to get the units
-  bel.ele.ras <- projectRaster(bel_ele.ras, crs = toString((filter(crs_data.df, code=="3812"))$prj4))
+  bel.ele.ras <- projectRaster(bel.ele.ras, crs = toString((dplyr::filter(rgdal::make_EPSG(), code=="3812"))$prj4))
   
   # compute the slope from the elevation
   bel.slope.ras <- terrain(bel.ele.ras, opt="slope", unit="degrees")
   
   # compute the aspect from the elevation
-  bel.aspect.ras <- terrain(bel_ele.ras, opt="aspect", unit="degrees")
+  bel.aspect.ras <- terrain(bel.ele.ras, opt="aspect", unit="degrees")
   
   # create the stack of rasters
   topo.stack.ras <- stack(bel.ele.ras, bel.slope.ras, bel.aspect.ras)
