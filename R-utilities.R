@@ -12,6 +12,37 @@
 #'date: \ 18-04-2018\
 #'---
 
+
+#+ ---------------------------------
+#' ## Function to create and save a spatial grid of the desired resolution for Wallonia
+#' * `res.num` is a numeric that expresses the desired resolution expressed in kilometers
+#' * `geom.chr` is a character that expresses the [desired geometry](https://www.rdocumentation.org/packages/sf/versions/0.6-1/topics/st_make_grid). Can take the values `"polygons"`, `"centers"` and `"corners`
+#' 
+#' [1](https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf)
+#' [2](https://gis.stackexchange.com/questions/22843/converting-decimal-degrees-units-to-km-in-r)
+#' [3](https://stackoverflow.com/questions/48727511/r-grid-of-points-from-polygon-input)
+build_wal_grid.fun <- function(res.num, geom.chr) {
+  library(sf)
+  library(dplyr)
+  library(raster)
+  
+  # Get the Wallonia adminisrative boundary - default EPSG is 4326
+  wallonia.4326.sf <- dplyr::filter(st_as_sf(getData('GADM', country="BE", level=1)), NAME_1=="Wallonie")
+  
+  # convert from geographic lat/lon to projected in meters
+  wallonia.3812.sf <- sf::st_transform(wallonia.4326.sf, 3812) # projected EPSG for Belgian Lambert 2008 
+  
+  # make the grid and clip it with the Wallonia boundaries 
+  # st_intersection(st_make_grid(wallonia.sf, n=c(100,100), what="centers"), dataset.sf)
+  grid.sf <- st_make_grid(wallonia.3812.sf, cellsize = res.num*1000, what=geom.chr)
+  
+  # Clip the grid with the administrative boundary of Wallonia
+  grid.sf <- st_intersection(grid.sf, wallonia.3812.sf)
+  
+  # Return the clipped grid
+  return(grid.sf)  
+}
+
 #+ ---------------------------------
 #' ## Function to recursively source all the function stored in a folder (designed by its path)
 #' 
@@ -58,7 +89,7 @@ lm_output_to_df.fun <-function(lm.l){
   names(values)<-c("call","intercept","slope","n","slope.SE","r.squared","Adj. r.squared","F-statistic","numdf","dendf","p.value") 
   return(data.frame(values))
 }
-  
+
 #+ ---------------------------------
 #' ## Terms of service 
 #' The present script is available under the [GNU-GPL V3](https://www.gnu.org/licenses/gpl-3.0.en.html) license and comes with ABSOLUTELY NO WARRANTY.
