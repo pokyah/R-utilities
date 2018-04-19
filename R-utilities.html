@@ -125,13 +125,44 @@ $(document).ready(function () {
 </div>
 
 
-<div id="function-to-create-and-save-a-spatial-grid-of-the-desired-resolution-for-wallonia" class="section level2">
-<h2>Function to create and save a spatial grid of the desired resolution for Wallonia</h2>
+<div id="function-to-create-a-raster-stack-of-elevation-slope-and-aspect-for-wallonia" class="section level2">
+<h2>Function to create a raster stack of Elevation, Slope and Aspect for Wallonia</h2>
+<p>Inspiration :<br />
+<a href="ttps://gis.stackexchange.com/questions/189866/how-to-check-my-epsg-and-units-in-r-when-it-is-not-defined-in-proj4string">1</a></p>
+<pre class="r"><code>build_topo_rasters.fun &lt;- function() {
+  # Loading the required library
+  library(raster)
+  library(rgdal)
+  library(dplyr)
+  
+  # Get the Wallonia DEM
+  bel.ele.ras = getData(&quot;alt&quot;, country = &quot;BE&quot;, mask = TRUE)
+  
+  # but what are the units ? h
+  # it seems that the data are not projected but are in longlat so we need to project it to get the units
+  bel.ele.ras &lt;- projectRaster(bel.ele.ras, crs = toString((dplyr::filter(rgdal::make_EPSG(), code==&quot;3812&quot;))$prj4))
+  
+  # compute the slope from the elevation
+  bel.slope.ras &lt;- terrain(bel.ele.ras, opt=&quot;slope&quot;, unit=&quot;degrees&quot;)
+  
+  # compute the aspect from the elevation
+  bel.aspect.ras &lt;- terrain(bel.ele.ras, opt=&quot;aspect&quot;, unit=&quot;degrees&quot;)
+  
+  # create the stack of rasters
+  topo.stack.ras &lt;- stack(bel.ele.ras, bel.slope.ras, bel.aspect.ras)
+  
+  # Return the stack of rasters
+  return(topo.stack.ras)
+}</code></pre>
+</div>
+<div id="function-to-create-a-spatial-grid-of-the-desired-resolution-for-wallonia" class="section level2">
+<h2>Function to create a spatial grid of the desired resolution for Wallonia</h2>
 <ul>
 <li><code>res.num</code> is a numeric that expresses the desired resolution expressed in kilometers</li>
 <li><code>geom.chr</code> is a character that expresses the <a href="https://www.rdocumentation.org/packages/sf/versions/0.6-1/topics/st_make_grid">desired geometry</a>. Can take the values <code>&quot;polygons&quot;</code>, <code>&quot;centers&quot;</code> and <code>&quot;corners</code></li>
 </ul>
-<p><a href="https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf">1</a> <a href="https://gis.stackexchange.com/questions/22843/converting-decimal-degrees-units-to-km-in-r">2</a> <a href="https://stackoverflow.com/questions/48727511/r-grid-of-points-from-polygon-input">3</a></p>
+<p>Inspiration :<br />
+<a href="https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf">1</a> <a href="https://gis.stackexchange.com/questions/22843/converting-decimal-degrees-units-to-km-in-r">2</a> <a href="https://stackoverflow.com/questions/48727511/r-grid-of-points-from-polygon-input">3</a></p>
 <pre class="r"><code>build_wal_grid.fun &lt;- function(res.num, geom.chr) {
   library(sf)
   library(dplyr)
@@ -156,7 +187,8 @@ $(document).ready(function () {
 </div>
 <div id="function-to-recursively-source-all-the-function-stored-in-a-folder-designed-by-its-path" class="section level2">
 <h2>Function to recursively source all the function stored in a folder (designed by its path)</h2>
-<p>Inspiration : <a href="https://stackoverflow.com/questions/32862426/load-all-files-from-folder-and-subfolders">1</a></p>
+<p>Inspiration :<br />
+<a href="https://stackoverflow.com/questions/32862426/load-all-files-from-folder-and-subfolders">1</a></p>
 <pre class="r"><code>source_files_recursively.fun &lt;- function(path.chr) {
   dirs &lt;- list.dirs(path.chr, recursive = FALSE)
   dirs &lt;- dirs[ ! grepl(&quot;.git&quot;, dirs) ]
@@ -171,7 +203,8 @@ $(document).ready(function () {
 </div>
 <div id="function-to-list-all-the-packages-installed-by-user." class="section level2">
 <h2>Function to list all the packages installed by user.</h2>
-<p>inspiration: <a href="https://stackoverflow.com/questions/38481980/get-the-list-of-installed-packages-by-user-in-r#40120266">1</a></p>
+<p>Inspiration:<br />
+<a href="https://stackoverflow.com/questions/38481980/get-the-list-of-installed-packages-by-user-in-r#40120266">1</a></p>
 <pre class="r"><code>get_installed_packages.fun &lt;- function(){ 
   ip = as.data.frame(installed.packages()[,c(1,3:4)])
   ip = ip[is.na(ip$Priority),1:2,drop=FALSE]
@@ -180,7 +213,8 @@ $(document).ready(function () {
 </div>
 <div id="function-to-transform-a-linear-model-list-output-to-a-dataframe." class="section level2">
 <h2>Function to transform a linear model list output to a dataframe.</h2>
-<p>Useful for markdown export with <a href="https://www.rdocumentation.org/packages/knitr/versions/1.20/topics/kable">kable</a> inspiration: <a href="http://r.789695.n4.nabble.com/Export-summary-from-regression-output-td4647109.html">1</a></p>
+<p>Useful for markdown export with <a href="https://www.rdocumentation.org/packages/knitr/versions/1.20/topics/kable">kable</a> Inspiration:<br />
+<a href="http://r.789695.n4.nabble.com/Export-summary-from-regression-output-td4647109.html">1</a></p>
 <pre class="r"><code>lm_output_to_df.fun &lt;-function(lm.l){ 
   values&lt;-c(paste(as.character(summary(lm.l)$call),collapse=&quot; &quot;), 
             lm.l$coefficients[1], 
