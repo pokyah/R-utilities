@@ -13,15 +13,46 @@
 #'---
 
 
+build_topo_rasters.fun <- function() {
+  # Loading the required library
+  library(raster)
+  library(rgdal)
+  library(dplyr)
+  
+  # Get the Wallonia DEM
+  bel.ele.ras = getData("alt", country = "BE", mask = TRUE)
+  
+  # but what are the units ? h
+  # it seems that the data are not projected but are in longlat so we need to project it to get the units
+  bel.ele.ras <- projectRaster(bel.ele.ras, crs = toString((dplyr::filter(rgdal::make_EPSG(), code=="3812"))$prj4))
+  
+  # compute the slope from the elevation
+  bel.slope.ras <- terrain(bel.ele.ras, opt="slope", unit="degrees")
+  
+  # compute the aspect from the elevation
+  bel.aspect.ras <- terrain(bel.ele.ras, opt="aspect", unit="degrees")
+  
+  # create the stack of rasters
+  topo.stack.ras <- stack(bel.ele.ras, bel.slope.ras, bel.aspect.ras)
+  
+  # Return the stack of rasters
+  return(topo.stack.ras)
+}
+
+
 #+ ---------------------------------
 #' ## Function to create a spatial grid of the desired resolution for Wallonia
+#' * `res.num` is a numeric that expresses the desired resolution expressed in kilometers
+#' * `geom.chr` is a character that expresses the [desired geometry](https://www.rdocumentation.org/packages/sf/versions/0.6-1/topics/st_make_grid). Can take the values `"polygons"`, `"centers"` and `"corners`
 #' 
+#' Inspiration :  
 #' [1](https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf)
 #' [2](https://gis.stackexchange.com/questions/22843/converting-decimal-degrees-units-to-km-in-r)
-build_wal_grid.fun <- function(resolution.num) {
+#' [3](https://stackoverflow.com/questions/48727511/r-grid-of-points-from-polygon-input)
+build_wal_grid.fun <- function(res.num, geom.chr) {
   library(sf)
   library(dplyr)
-  library(rgdal)
+  library(raster)
   
   # Get the Wallonia adminisrative boundary - default EPSG is 4326
   wallonia.4326.sf <- dplyr::filter(st_as_sf(getData('GADM', country="BE", level=1)), NAME_1=="Wallonie")
@@ -31,42 +62,13 @@ build_wal_grid.fun <- function(resolution.num) {
   
   # make the grid and clip it with the Wallonia boundaries 
   # st_intersection(st_make_grid(wallonia.sf, n=c(100,100), what="centers"), dataset.sf)
-  grid.sf <- st_make_grid(wallonia.3812.sf, n=c(1000,1000), what="centers")
+  grid.sf <- st_make_grid(wallonia.3812.sf, cellsize = res.num*1000, what=geom.chr)
   
   # Clip the grid with the administrative boundary of Wallonia
   grid.sf <- st_intersection(grid.sf, wallonia.3812.sf)
   
-  
-  grid.res.num <- 1
-  axis_x <- seq(min(records.reshaped.df$ens_61), max(records.reshaped.df$ens_61), by = graph_reso)
-  axis_y <- seq(min(records.reshaped.df$vvt_61), max(records.reshaped.df$vvt_61), by = graph_reso)
-  tsadiff_lm_surface <- expand.grid(ens_61 = axis_x, vvt_61 = axis_y,KEEP.OUT.ATTRS = F)
-  
-  mapview(st_make_grid(wallonia.sf, n=c(100,100), what="centers"))
-  
-  st_intersection(st_make_grid(dataset.sf, n=c(100,100), what="centers"), dataset.sf)
-  
-  
-  st_make_grid(
-    dataset.sf,
-    cellsize = c(
-        diff(st_bbox(x)[c(1, 3)]),
-        diff(st_bbox(x)[c(2,4)])
-      )/n,
-    offset = st_bbox(x)[1:2],
-    n = c(10, 10),
-    crs = if (missing(x)) NA_crs_ else st_crs(x),
-    what = "centers"
-  )
-  
-  splitRaster(raster(SpatialGrid((points2grid(as_Spatial(st_make_grid(what = "centers")))))))
-
-  
-  files <- list.files(path, pattern = "^.*[Rr]$", include.dirs = FALSE, full.names = TRUE)
-  for (f in files)
-    source(f)
-  for (d in dirs)
-    source_files_recursively.fun(d)
+  # Return the clipped grid
+  return(grid.sf)  
 }
 
 #+ ---------------------------------
