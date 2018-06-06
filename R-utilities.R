@@ -39,9 +39,43 @@ build_topo_rasters.fun <- function() {
   return(topo.stack.ras)
 }
 
+#+ ---------------------------------
+#' ## Function to create a spatial grid of the desired resolution for Wallonia using sp
+#' * `res.num` is a numeric that expresses the desired resolution expressed in kilometers
+#' 
+#' Inspiration :  
+#' [1]https://stackoverflow.com/questions/41787313/how-to-create-a-grid-of-spatial-points
+
+build_wal_grid.sp.fun <- function(res.num){
+  # load some spatial data. Administrative Boundary
+  be.sp <- getData('GADM', country = 'BE', level = 1, download = FALSE)
+  be.sp$NAME_1
+  wallonie.sp <- be.sp[be.sp$NAME_1 == "Wallonie",]
+
+  # check the CRS to know which map units are used  
+  proj4string(wallonie.sp)
+
+  # set CRS to "lambert 2008" which EPSG is 3812
+  wallonie.3812.sp <- spTransform(wallonie.sp, CRS(projargs = dplyr::filter(rgdal::make_EPSG(), code == "3812")$prj4))
+
+  # Create a grid of points within the bbox of the SpatialPolygonsDataFrame 
+  # wallonie with meters as map units
+  grid <- makegrid(wallonie.3812.sp, cellsize = res.num) # cellsize in map units!
+
+  # grid is a data.frame. To change it to a spatial data set we have to :
+  grid <- SpatialPoints(grid, proj4string = CRS(proj4string(wallonie.3812.sp)))
+
+  # subset to wallonie polygon
+  grid <- grid[wallonie.3812.sp, ]
+
+  # Return the clipped grid
+  return(grid)
+}
+
+
 
 #+ ---------------------------------
-#' ## Function to create a spatial grid of the desired resolution for Wallonia
+#' ## Function to create a spatial grid of the desired resolution for Wallonia using sf
 #' * `res.num` is a numeric that expresses the desired resolution expressed in kilometers
 #' * `geom.chr` is a character that expresses the [desired geometry](https://www.rdocumentation.org/packages/sf/versions/0.6-1/topics/st_make_grid). Can take the values `"polygons"`, `"centers"` and `"corners`
 #' 
@@ -49,7 +83,7 @@ build_topo_rasters.fun <- function() {
 #' [1](https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/OverviewCoordinateReferenceSystems.pdf)
 #' [2](https://gis.stackexchange.com/questions/22843/converting-decimal-degrees-units-to-km-in-r)
 #' [3](https://stackoverflow.com/questions/48727511/r-grid-of-points-from-polygon-input)
-build_wal_grid.fun <- function(res.num, geom.chr) {
+build_wal_grid.sf.fun <- function(res.num, geom.chr) {
   library(sf)
   library(dplyr)
   library(raster)
