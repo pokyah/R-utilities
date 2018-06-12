@@ -48,7 +48,7 @@ build_topo_rasters.fun <- function() {
 
 build_wal_grid.sp.fun <- function(res.num){
   # load some spatial data. Administrative Boundary
-  be.sp <- getData('GADM', country = 'BE', level = 1, download = FALSE)
+  be.sp <- getData('GADM', country = 'BE', level = 1, download = TRUE)
   be.sp$NAME_1
   wallonie.sp <- be.sp[be.sp$NAME_1 == "Wallonie",]
 
@@ -68,11 +68,52 @@ build_wal_grid.sp.fun <- function(res.num){
   # subset to wallonie polygon
   grid <- grid[wallonie.3812.sp, ]
 
+  ## put back in WGS84
+  grid <- spTransform(grid, CRS(proj4string(wallonie.sp)))
+
   # Return the clipped grid
   return(grid)
 }
 
+build_agromet_stations_points.sp.fun <- function(){
+  
+  # proj4 of the API data
+  proj4.chr <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  
+  # Retrieving useless data from API
+  demo.records.df <- prepare_agromet_API_data.fun(
+    get_from_agromet_API.fun(
+      user_token.chr = Sys.getenv("AGROMET_API_V1_KEY"),
+      table_name.chr = "cleandata",
+      stations_ids.chr = "all",
+      sensors.chr = "tsa",
+      dfrom.chr = as.character(Sys.Date()-60),
+      dto.chr = as.character(Sys.Date()-59),
+      api_v.chr = "v2"
+    )
+  )
+  
+  # Filtering records to keep only the useful ones (removing unecessary stations)
+  demo.records.df <- demo.records.df %>%
+    filter(network_name == "pameseb") %>%
+    filter(type_name != "Sencrop") %>%
+    filter(!is.na(to)) %>%
+    filter(state == "Ok") %>%
+    filter(!is.na(tsa))
+  
+  # Selecting only the useful features
+  demo.records.df <- demo.records.df %>%
+    dplyr::select(one_of(c("sid", "mtime", "longitude", "latitude", "altitude")))
+  
+  # defining the stations locations sp object
+  stations.sp <- demo.records.df %>% 
+    dplyr::filter(mtime == min(mtime, na.rm = TRUE))
+  coordinates(stations.sp) <- c("longitude", "latitude")
+  crs(stations.sp) <- proj4.chr
 
+  # Return the clipped grid
+  return(stations.sp)
+}
 
 #+ ---------------------------------
 #' ## Function to create a spatial grid of the desired resolution for Wallonia using sf
